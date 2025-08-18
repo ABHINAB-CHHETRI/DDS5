@@ -1,0 +1,226 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drone Dispatch System (DDS)</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Montserrat:wght@300;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="nav-wrap">
+        <div class="container nav">
+            <div class="brand">
+                <div class="logo-placeholder"></div>
+                Drone Dispatch System (DDS)
+            </div>
+            <div class="links">
+                <a href="#tech-stack">Tech Stack</a>
+                <a href="#team">Team</a>
+                <a href="#drone">Drone</a>
+                <a href="#login">Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container hero-inner">
+            <div class="hero-copy">
+                <h1>Saving Lives with Drone Technology</h1>
+                <p class="lede">Drone Dispatch System (DDS) delivers emergency medical supplies fast, safe, and reliable using autonomous drones.</p>
+                <div class="cta">
+                    <a href="#login" class="btn">Login</a>
+                    <a href="#tech-stack" class="btn ghost">Learn More</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="{{ url_for('static', filename='photos/into_image.png') }}" alt="Hero Image" width="500" height="400">
+            </div>
+        </div>
+    </section>
+
+    <section id="tech-stack" class="pad-block">
+        <div class="container">
+            <div class="page-head">
+                <h2>Technology Stack</h2>
+                <p class="lede">Our platform is built with robust and modern technologies.</p>
+            </div>
+            <div class="grid tech">
+                <div class="stack">
+                    <h3>AI/ML</h3>
+                    <p>Autonomous flight planning, obstacle detection and route optimization.</p>
+                </div>
+                <div class="stack">
+                    <h3>Frontend</h3>
+                    <p>Clean UI/UX powered by HTML, CSS, and JavaScript frameworks.</p>
+                </div>
+                <div class="stack">
+                    <h3>Backend</h3>
+                    <p>Scalable APIs with Node.js, Express, and secure database handling.</p>
+                </div>
+                <div class="stack">
+                    <h3>DevOps</h3>
+                    <p>Cloud deployment, monitoring, and continuous integration pipelines.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="team" class="pad-block team-section">
+        <div class="container">
+            <div class="page-head">
+                <h2>Meet the Team</h2>
+                <p class="lede">The brilliant minds behind Drone Dispatch System (DDS)</p>
+            </div>
+            <div class="grid team">
+                <div class="person">
+                    <div class="avatar-img">
+                        <img src="{{ url_for('static', filename='photos/team/LAKSHITA.jfif') }}" alt="Lakshita" />
+                    </div>
+                    <h3>Lakshita</h3>
+                    <p>AI/ML Implementation</p>
+                    <small>lakshitaagarwal2411@gmail.com</small>
+                </div>
+                <div class="person">
+                    <div class="avatar-img">
+                        <img src="{{ url_for('static', filename='photos/team/lahari.jpg') }}" alt="Lahari" />
+                    </div>
+                    <h3>Lahari</h3>
+                    <p>Frontend (UI/UX)</p>
+                    <small>bomminelilahari@gmail.com</small>
+                </div>
+                <div class="person">
+                    <div class="avatar-img">
+                        <img src="{{ url_for('static', filename='photos/team/kaamya.jpg') }}" alt="Kaamya" />
+                    </div>
+                    <h3>Kaamya</h3>
+                    <p>Idea and DevOps</p>
+                    <small>kmatbha_be24@thapar.edu</small>
+                </div>
+                <div class="person">
+                    <div class="avatar-img">
+                        <img src="{{ url_for('static', filename='photos/team/kamesh.jfif') }}" alt="Kamesh" />
+                    </div>
+                    <h3>Kamesh</h3>
+                    <p>Website Backend</p>
+                    <small>yadavkamesh19@gmail.com</small>
+                </div>
+                <div class="person">
+                    <div class="avatar-img">
+                        <img src="{{ url_for('static', filename='photos/team/aryan.png') }}" alt="Aryan" />
+                    </div>
+                    <h3>Aryan</h3>
+                    <p>Website Backend</p>
+                    <small>aryanwastiht017@gmail.com</small>
+                </div>
+                <div class="person">
+                    <div class="avatar-img">
+                        <img src="{{ url_for('static', filename='photos/team/abhinab.jpg') }}" alt="Abhinab" />
+                    </div>
+                    <h3>Abhinab</h3>
+                    <p>Drone Logic & Visualization</p>
+                    <small>abhinab2k05@gmail.com</small>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="drone" class="pad-block drone-section">
+        <div class="container">
+            <div class="page-head">
+                <h2>The Drone</h2>
+                <p class="lede">Engineered for speed, reliability, and lifesaving delivery.</p>
+            </div>
+            <div class="drone-wrap">
+                <div class="drone-image-container">
+                    <div class="drone-image">
+                        <!-- Placeholder for image -->
+                    </div>
+                </div>
+                <div class="specs">
+                    <ul class="drone-specs">
+                        <li><span>Max Range</span><strong>15 km</strong></li>
+                        <li><span>Payload</span><strong>8 kg</strong></li>
+                        <li><span>Top Speed</span><strong>80 km/h</strong></li>
+                        <li><span>Autonomy</span><strong>AI-powered</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="login" class="pad-block auth">
+    <div class="container">
+        <h2>Login</h2>
+        <p class="lede">Access your Drone Dispatch System (DDS) dashboard</p>
+        {% if error %}
+            <p style="color: #d90429;">{{ error }}</p>
+        {% endif %}
+        <form method="POST" action="/login">
+            <label>
+                Email
+                <input type="text" name="email" placeholder="Enter your email">
+            </label>
+            <label>
+                Password
+                <input type="password" name="password" placeholder="Enter your password">
+            </label>
+            <label>
+                Access Token
+                <input type="text" name="access_token" placeholder="Enter your access token">
+            </label>
+            <button type="submit" class="btn">Login</button>
+        </form>
+    </div>
+</section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>© 2025 Drone Dispatch System (DDS) — Drone Devs</p>
+        </div>
+    </footer>
+</body>
+</html>

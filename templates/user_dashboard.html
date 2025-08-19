@@ -1,129 +1,255 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>User Dashboard</title>
-    <style>
-      body {
-        font-family: 'Segoe UI', Arial, sans-serif;
-        background: linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%);
-        margin: 0;
-        padding: 30px;
-      }
-      h1 {
-        text-align: center;
-        color: #1a237e;
-        letter-spacing: 2px;
-        margin-bottom: 30px;
-        font-weight: 700;
-        font-size: 2.2rem;
-      }
-      .cards {
-        display: flex;
-        justify-content: center;
-        gap: 40px;
-        margin-top: 30px;
-        flex-wrap: wrap;
-      }
-      .vaccine-card,
-      .other-card {
-        background: #fff;
-        border-radius: 16px;
-        box-shadow: 0 6px 24px rgba(30, 64, 175, 0.12);
-        padding: 28px 24px;
-        max-width: 370px;
-        flex: 1 1 340px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        transition: box-shadow 0.2s;
-      }
-      .vaccine-card:hover,
-      .other-card:hover {
-        box-shadow: 0 12px 32px rgba(30, 64, 175, 0.18);
-      }
-      .vaccines {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 18px;
-        justify-content: center;
-        margin-bottom: 24px;
-        width: 100%;
-      }
-      .box {
-        background: linear-gradient(90deg, #e3f0ff 0%, #f7fbff 100%);
-        border-radius: 8px;
-        padding: 18px 0;
-        width: 46%;
-        min-width: 130px;
-        text-align: center;
-        box-sizing: border-box;
-        font-weight: 500;
-        color: #1565c0;
-        box-shadow: 0 2px 8px rgba(21, 101, 192, 0.07);
-        transition: background 0.2s;
-      }
-      .box:hover {
-        background: linear-gradient(90deg, #bbdefb 0%, #e3f0ff 100%);
-        color: #0d47a1;
-      }
-      .map {
-        text-align: center;
-        width: 100%;
-      }
-      .map img {
-        width: 100%;
-        border-radius: 12px;
-        max-width: 320px;
-        box-shadow: 0 4px 16px rgba(21, 101, 192, 0.09);
-        border: 2px solid #e3f0ff;
-        margin-bottom: 20px;
-      }
-      .dispatch-btn {
-        padding: 12px 32px;
-        background: linear-gradient(90deg, #1976d2 0%, #64b5f6 100%);
-        color: #fff;
-        border: none;
-        border-radius: 6px;
-        font-size: 1.08rem;
-        font-weight: 600;
-        cursor: pointer;
-        box-shadow: 0 2px 8px rgba(25, 118, 210, 0.13);
-        transition: background 0.2s, box-shadow 0.2s;
-        width: 100%;
-      }
-      .dispatch-btn:hover {
-        background: linear-gradient(90deg, #1565c0 0%, #1976d2 100%);
-        box-shadow: 0 4px 16px rgba(25, 118, 210, 0.18);
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Drone Dispatch System</h1>
-    <div class="cards">
-      <!-- Left side: Vaccine Card -->
-      <div class="vaccine-card">
-        <div class="vaccines">
-          <div class="box"><p>Vaccine 1</p></div>
-          <div class="box"><p>Vaccine 2</p></div>
-          <div class="box"><p>Vaccine 3</p></div>
-          <div class="box"><p>Vaccine 4</p></div>
-          <div class="box"><p>Vaccine 5</p></div>
-          <div class="box"><p>Vaccine 6</p></div>
-        </div>
-      </div>
 
-      <!-- Right side: Other Card -->
-      <div class="other-card">
-        <div class="map">
-          <img
-            src="https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg"
-            alt="Dashboard Map"
-          />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Dashboard</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%);
+      margin: 0;
+      padding: 30px;
+    }
+
+    h1 {
+      text-align: center;
+      color: crimson;
+      letter-spacing: 7px;
+      margin-bottom: 30px;
+      font-weight: 700;
+      font-size: 2.2rem;
+    }
+
+    .cards {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+
+    /* Vaccine grid */
+    .vaccine-card {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+      flex: 1 1 500px;
+    }
+
+    .box {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+      padding: 18px 20px;
+      text-align: center;
+      transition: all 0.25s ease;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+
+    .box img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    .box h3 {
+      margin: 10px 0;
+      color: #1976d2;
+      font-size: 1.2rem;
+    }
+
+    .box p {
+      font-size: 0.9rem;
+      color: #444;
+    }
+
+    /* Hover & selection effect */
+    .box:hover {
+      transform: translateY(-6px) scale(1.03);
+      box-shadow: 0 10px 26px rgba(25, 118, 210, 0.25);
+    }
+
+    input[type="radio"] {
+      display: none;
+    }
+
+    input[type="radio"]:checked+label .box {
+      border: 2px solid #1976d2;
+      box-shadow: 0 0 12px rgba(25, 118, 210, 0.4);
+    }
+
+    /* Right side */
+    .other-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 6px 24px rgba(30, 64, 175, 0.12);
+      padding: 20px;
+      max-width: 650px;
+      flex: 1 1 340px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .map {
+      width: 100%;
+      height: 400px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    form {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+    }
+
+    .vaccine-card {
+      flex: 1 1 500px;
+    }
+
+    .other-card form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+
+    input[type="text"] {
+      padding: 8px;
+      width: 80%;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 12px 32px;
+      background: linear-gradient(90deg, #1976d2 0%, #64b5f6 100%);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 1.08rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 80%;
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      background: linear-gradient(90deg, #1565c0 0%, #1976d2 100%);
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Drone Dispatch System</h1>
+
+  <!-- ✅ One single form -->
+  <form method="POST" action="/tracking" class="cards">
+
+    <!-- Left side vaccines -->
+    <div class="vaccine-card">
+      <input type="radio" id="antiVenom" name="vaccine" value="Anti Venom" required>
+      <label for="antiVenom">
+        <div class="box">
+          <h3>Anti Venom</h3>
+          <img src="https://tse2.mm.bing.net/th/id/OIP.XFgww_A6-E7UQRzImsgo3QHaE8?rs=1&pid=ImgDetMain&o=7&rm=3" alt="vaccine">
+          <p>Used to treat venomous bites and stings from snakes and insects.</p>
         </div>
-        <button class="dispatch-btn">Dispatch</button>
-      </div>
+      </label>
+
+      <input type="radio" id="measles" name="vaccine" value="Measles Vaccine">
+      <label for="measles">
+        <div class="box">
+          <h3>Measles Vaccine</h3>
+          <img src="https://tse2.mm.bing.net/th/id/OIP.XFgww_A6-E7UQRzImsgo3QHaE8?rs=1&pid=ImgDetMain&o=7&rm=3" alt="vaccine">
+          <p>Prevents measles, a highly contagious viral disease.</p>
+        </div>
+      </label>
+
+      <input type="radio" id="polio" name="vaccine" value="Polio Vaccine">
+      <label for="polio">
+        <div class="box">
+          <h3>Polio Vaccine</h3>
+          <img src="https://tse2.mm.bing.net/th/id/OIP.XFgww_A6-E7UQRzImsgo3QHaE8?rs=1&pid=ImgDetMain&o=7&rm=3" alt="vaccine">
+          <p>Protects against poliovirus, preventing paralysis and complications.</p>
+        </div>
+      </label>
+
+      <input type="radio" id="rabies" name="vaccine" value="Rabies Vaccine">
+      <label for="rabies">
+        <div class="box">
+          <h3>Rabies Vaccine</h3>
+          <img src="https://tse2.mm.bing.net/th/id/OIP.XFgww_A6-E7UQRzImsgo3QHaE8?rs=1&pid=ImgDetMain&o=7&rm=3" alt="vaccine">
+          <p>Prevents rabies infection after animal bites or exposure.</p>
+        </div>
+      </label>
+
+      <input type="radio" id="tetanus" name="vaccine" value="Tetanus Vaccine">
+      <label for="tetanus">
+        <div class="box">
+          <h3>Tetanus Vaccine</h3>
+          <img src="https://tse2.mm.bing.net/th/id/OIP.XFgww_A6-E7UQRzImsgo3QHaE8?rs=1&pid=ImgDetMain&o=7&rm=3" alt="vaccine">
+          <p>Protects against tetanus, a serious bacterial infection.</p>
+        </div>
+      </label>
+
+      <input type="radio" id="hepB" name="vaccine" value="Hepatitis B Vaccine">
+      <label for="hepB">
+        <div class="box">
+          <h3>Hepatitis B Vaccine</h3>
+          <img src="https://tse2.mm.bing.net/th/id/OIP.XFgww_A6-E7UQRzImsgo3QHaE8?rs=1&pid=ImgDetMain&o=7&rm=3" alt="vaccine">
+          <p>Prevents hepatitis B virus infection and liver complications.</p>
+        </div>
+      </label>
     </div>
-  </body>
+
+    <!-- Right side -->
+    <div class="other-card">
+      <div id="map" class="map"></div>
+      <input type="text" id="latitude" name="lat" placeholder="Latitude" readonly required>
+      <input type="text" id="longitude" name="lng" placeholder="Longitude" readonly required>
+      <button type="submit">Dispatch</button>
+    </div>
+  </form>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([30.3529, 76.3637], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    L.marker([30.3529, 76.3637]).addTo(map).bindPopup("Home Station").openPopup();
+
+    L.circle([30.3529, 76.3637], {
+      radius: 15000,
+      color: "blue",
+      fillColor: "#80c0ff",
+      fillOpacity: 0.2
+    }).addTo(map);
+
+    let userMarker;
+    map.on('click', function (e) {
+      if (userMarker) map.removeLayer(userMarker);
+      userMarker = L.marker(e.latlng).addTo(map)
+        .bindPopup(`Selected: ${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`)
+        .openPopup();
+
+      document.getElementById("latitude").value = e.latlng.lat.toFixed(5);
+      document.getElementById("longitude").value = e.latlng.lng.toFixed(5);
+    });
+  </script>
+</body>
 </html>

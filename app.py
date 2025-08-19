@@ -29,9 +29,17 @@ def dashboard():
 @app.route('/user_dashboard')
 def user_dashboard():
     return render_template('user_dashboard.html')
-@app.route('/tracking')
+
+@app.route('/tracking', methods=['GET', 'POST'])
 def tracking():
+    if request.method == 'POST':
+        vaccine_type = request.form.get('vaccine')  
+        latitude = request.form.get('lat')         
+        longitude = request.form.get('lng')          
+        print(f"Vaccine Type: {vaccine_type}, Latitude: {latitude}, Longitude: {longitude}")
+        return redirect(url_for('user_dashboard'))
     return render_template('tracking.html')
+
 
 if __name__ == "__main__":
     import os

@@ -23,12 +23,10 @@ def login():
     if (username == DUMMY_USERNAME and 
         password == DUMMY_PASSWORD and 
         access_token == DUMMY_ACCESS_TOKEN):
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('user_dashboard'))
     return render_template('index.html', error="Invalid credentials or access token")
 
-@app.route('/dashboard')
-def dashboard():
-    return render_template('dashboard.html')
+
 
 @app.route('/user_dashboard')
 def user_dashboard():

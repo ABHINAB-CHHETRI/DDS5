@@ -19,7 +19,7 @@ def login():
     if (username == DUMMY_USERNAME and 
         password == DUMMY_PASSWORD and 
         access_token == DUMMY_ACCESS_TOKEN):
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('user_dashboard'))
     return render_template('index.html', error="Invalid credentials or access token")
 
 @app.route('/dashboard')
@@ -44,3 +44,4 @@ def tracking():
 if __name__ == "__main__":
     import os
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
+

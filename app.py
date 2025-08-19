@@ -146,8 +146,11 @@ def user_dashboard():
     cursor= connection.cursor()
     cursor.execute("SELECT * FROM vaccines")
     vaccines = cursor.fetchall()
+    cursor.execute("SELECT * FROM deliveries WHERE user_mail = %s", (session.get('user_email'),))
+    deliveries = cursor.fetchall()
     cursor.close()
     session['vaccines'] = vaccines
+    session['deliveries'] = deliveries
     return render_template('user_dashboard.html')
 
 @app.route('/tracking', methods=['GET', 'POST'])
@@ -198,18 +201,41 @@ def tracking():
             conn = get_db_connection()
             if conn:
                 try:
+                    print(f"Saving tracking info: {data}")
                     with conn.cursor() as cursor:
                         cursor.execute(
-                            "INSERT INTO deliveries (user_email, vaccine_id, latitude, longitude, distance_km) VALUES (%s, %s, %s, %s, %s)",
-                            (session.get('user_email'), vaccine_id, lat2, lon2, distance)
+                            "INSERT INTO deliveries (user_mail, vaccine_id, latitude, longitude, distance_km, status) VALUES (%s, %s, %s, %s, %s, %s)",
+                            (session.get('user_email'), vaccine_id, lat2, lon2, distance, "Created")
                         )
+                        delivery_id = cursor.lastrowid
                     conn.commit()
+
+                    data["delivery_id"] = delivery_id
+
                 except Exception as e:
                     print(f"Error saving tracking info: {e}")
                 finally:
                     conn.close()
             return render_template("tracking.html", data=data)
     return render_template('tracking.html')
+from flask import jsonify
+
+@app.route('/mark_delivered', methods=['POST'])
+def mark_delivered():
+    delivery_id = request.json.get("delivery_id")
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"error": "DB connection failed"}), 500
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("UPDATE deliveries SET status=%s WHERE id=%s", ("Delivered", delivery_id))
+        conn.commit()
+        return jsonify({"success": True, "delivery_id": delivery_id})
+    except Exception as e:
+        print(f"Error updating delivery: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)

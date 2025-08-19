@@ -161,7 +161,7 @@
   // Distance & ETA
   const distanceMeters = map.distance([homeLat, homeLng], [targetLat, targetLng]);
   const distanceKm = distanceMeters / 1000;
-  const speedKmh = 80;
+  const speedKmh = 100;
   const etaHours = distanceKm / speedKmh;
   const durationMs = etaHours * 3600 * 1000;
 
@@ -200,50 +200,20 @@
 
     if (progress < 1) {
       requestAnimationFrame(animateDrone);
-    } else {
-      droneMarker.bindPopup("Drone Arrived!").openPopup();
-    }
+    }else {
+  droneMarker.bindPopup("Drone Arrived!").openPopup();
+
+  // Call backend to mark delivery as delivered
+  fetch("/mark_delivered", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ delivery_id: {{ data.delivery_id }} })
+  });
+}
+
   }
 
   requestAnimationFrame(animateDrone);
-
-  // Fit map to bounds between home and target
-  const bounds = L.latLngBounds([homeLat, homeLng], [targetLat, targetLng]);
-  map.fitBounds(bounds.pad(0.2)); // Add some padding for better view
-
-  // Keep drone always in center during animation
-  function animateDroneWithCenter(timestamp) {
-    if (!startTime) startTime = timestamp;
-    const elapsed = timestamp - startTime;
-    const progress = Math.min(elapsed / durationMs, 1);
-
-    // Interpolate position
-    const lat = homeLat + (targetLat - homeLat) * progress;
-    const lng = homeLng + (targetLng - homeLng) * progress;
-
-    droneMarker.setLatLng([lat, lng]);
-    map.setView([lat, lng], map.getZoom(), { animate: false });
-
-    // Update ETA countdown
-    const remainingMs = durationMs - elapsed;
-    if (remainingMs > 0) {
-      const minutes = Math.floor(remainingMs / 60000);
-      const seconds = Math.floor((remainingMs % 60000) / 1000);
-      document.getElementById("eta").innerText =
-        `ETA: ${minutes}m ${seconds}s (Speed: ${speedKmh} km/h, Distance: ${distanceKm.toFixed(2)} km)`;
-    } else {
-      document.getElementById("eta").innerText = "Drone Arrived!";
-    }
-
-    if (progress < 1) {
-      requestAnimationFrame(animateDroneWithCenter);
-    } else {
-      droneMarker.bindPopup("Drone Arrived!").openPopup();
-    }
-  }
-
-  // Start animation with drone always centered
-  requestAnimationFrame(animateDroneWithCenter);
 </script>
 
 </html>

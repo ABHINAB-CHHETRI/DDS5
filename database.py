@@ -19,7 +19,7 @@ def delete_tables():
         cursor = connection.cursor()
         cursor.execute("DROP TABLE IF EXISTS deliveries")
         # cursor.execute("DROP TABLE IF EXISTS users")
-        cursor.execute("DROP TABLE IF EXISTS vaccines")
+        # cursor.execute("DROP TABLE IF EXISTS vaccines")
         connection.commit()
     except Exception as e:
         print(f"Error deleting tables: {e}")
@@ -74,7 +74,7 @@ def create_tables():
                 latitude DECIMAL(10,6) NOT NULL,
                 longitude DECIMAL(10,6) NOT NULL,
                 distance_km DECIMAL(6,2),
-                status VARCHAR(20) DEFAULT 'pending',
+                status VARCHAR(20) DEFAULT 'created',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_mail) REFERENCES users(email),
                 FOREIGN KEY (vaccine_id) REFERENCES vaccines(id)

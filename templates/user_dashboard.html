@@ -160,6 +160,37 @@
       content: "⚠️ ";
       font-size: 1.5rem;
     }
+    .past_deliveries {
+      margin-top: 40px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 6px 24px rgba(30, 64, 175, 0.12);
+      padding: 20px;
+    }
+    .past_deliveries h2 {
+      text-align: center;
+      color: #1976d2;
+      margin-bottom: 20px;
+    }
+    .past_deliveries table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .past_deliveries th, .past_deliveries td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+    .past_deliveries th {
+      background: #f0f0f0;
+      color: #1976d2;
+    }
+    .past_deliveries td {
+      color: #555;
+    }
+    .past_deliveries tr:hover {
+      background: #f9f9f9;
+    }
   </style>
 </head>
 
@@ -175,6 +206,7 @@
   {% if location_error %}
   <h3 class="error">{{ location_error }}</h3>
   {% endif %}
+
   <form method="POST" action="/tracking" class="cards">
 
     <!-- Left side vaccines -->
@@ -202,7 +234,47 @@
       <button type="submit">Dispatch</button>
     </div>
   </form>
+  <div class="past_deliveries">
+    <h2>Past Deliveries</h2>
+    {% if session['deliveries'] %}
+    <table>
+      <thead>
+        <tr>
+          <th>Delivery ID</th>
+          <th>Vaccine</th>
+          <th>Location</th>
+          <th>Distance (km)</th>
+          <th>Date & Time</th>
+          <th>Status</th>
 
+        </tr>
+      </thead>
+      <tbody>
+        {% for delivery in session['deliveries'] %}
+        <tr>
+          <td>{{ delivery.id }}</td>
+          <td>
+            <strong>{{ delivery.vaccine_name }}</strong><br>
+            <span style="color:#888;font-size:0.95em;">ID: {{ delivery.vaccine_id }}</span>
+          </td>
+          <td>
+            ( <span title="Latitude, Longitude">
+              <span style="color:#1976d2;">{{ delivery.latitude }}</span>, 
+              <span style="color:#1976d2;">{{ delivery.longitude }}</span>
+            </span>)
+          </td>
+          <td>{{ delivery.distance_km }}</td>
+          <td>{{ delivery.created_at }}</td>
+          <td>{{ delivery.status }}</td>
+
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="text-align:center;color:#888;">No past deliveries found.</p>
+    {% endif %}
+  </div>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
     const map = L.map('map').setView([30.3529, 76.3637], 12);

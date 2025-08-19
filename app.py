@@ -26,6 +26,13 @@ def login():
 def dashboard():
     return render_template('dashboard.html')
 
+@app.route('/user_dashboard')
+def user_dashboard():
+    return render_template('user_dashboard.html')
+@app.route('/tracking')
+def tracking():
+    return render_template('tracking.html')
+
 if __name__ == "__main__":
     import os
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)

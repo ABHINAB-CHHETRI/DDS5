@@ -28,9 +28,20 @@ def delete_tables():
 def show_contents():
     try:
         cursor = connection.cursor()
+        print("Users table:")
+        cursor.execute("SELECT * FROM users")
+        users = cursor.fetchall()
+        for row in users:
+            print(row)
+        print("\nVaccines table:")
         cursor.execute("SELECT * FROM vaccines")
-        results = cursor.fetchall()
-        for row in results:
+        vaccines = cursor.fetchall()
+        for row in vaccines:
+            print(row)
+        print("\nDeliveries table:")
+        cursor.execute("SELECT * FROM deliveries")
+        deliveries = cursor.fetchall()
+        for row in deliveries:
             print(row)
     except Exception as e:
         print(f"Error fetching data: {e}")
@@ -42,8 +53,7 @@ def create_tables():
         cursor = connection.cursor()
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                email VARCHAR(100) UNIQUE NOT NULL,
+                email VARCHAR(100) PRIMARY KEY,
                 password VARCHAR(255) NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
@@ -59,14 +69,14 @@ def create_tables():
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS deliveries (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT,
+                user_mail VARCHAR(100) NOT NULL,
                 vaccine_id INT,
                 latitude DECIMAL(10,6) NOT NULL,
                 longitude DECIMAL(10,6) NOT NULL,
                 distance_km DECIMAL(6,2),
                 status VARCHAR(20) DEFAULT 'pending',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users(id),
+                FOREIGN KEY (user_mail) REFERENCES users(email),
                 FOREIGN KEY (vaccine_id) REFERENCES vaccines(id)
             )
         """)
@@ -85,15 +95,15 @@ def add_vaccine(name, description, image_url):
     finally:
         cursor.close()
 if __name__ == "__main__":
-    delete_tables()
+    # delete_tables()
     # print("Existing tables deleted successfully.")
     create_tables()
     # print("Database tables created successfully.")
-    add_vaccine("Anti Venom", "Used to treat venomous bites and stings from snakes and insects.", "https://tse1.mm.bing.net/th/id/OIP.pwW7kr8TEt3-jXFVhp1RugHaE8?w=1024&h=683&rs=1&pid=ImgDetMain&o=7&rm=3")
-    add_vaccine("Measles Vaccine", "Prevents measles, a highly contagious viral disease.", "https://today.uconn.edu/wp-content/uploads/2024/02/AdobeStock_283415438-scaled.jpeg")
-    add_vaccine("Polio Vaccine", "Protects against poliovirus, preventing paralysis and complications.", "https://w.ndtvimg.com/sites/3/2023/06/15175352/polio.jpg")
-    add_vaccine("Rabies Vaccine", "Prevents rabies infection after animal bites or exposure.", "https://www.annapharmacy.com/wp-content/uploads/2023/08/How-Long-Does-An-Anti-Rabies-Vaccine-Provide-Immunity-In-Humans-scaled.webp")
-    add_vaccine("Tetanus Vaccine", "Protects against tetanus, a serious bacterial infection.", "https://komonews.com/resources/media/7f9d1abc-2cdb-4622-8ebe-5e87bcafb623-TetanusShot_August.jpg")
-    add_vaccine("Hepatitis B Vaccine", "Prevents hepatitis B virus infection and liver complications.", "https://medicaldialogues.in/h-upload/2025/03/25/280095-hepatitis-b-vaccine.webp")
+    # add_vaccine("Anti Venom", "Used to treat venomous bites and stings from snakes and insects.", "https://tse1.mm.bing.net/th/id/OIP.pwW7kr8TEt3-jXFVhp1RugHaE8?w=1024&h=683&rs=1&pid=ImgDetMain&o=7&rm=3")
+    # add_vaccine("Measles Vaccine", "Prevents measles, a highly contagious viral disease.", "https://today.uconn.edu/wp-content/uploads/2024/02/AdobeStock_283415438-scaled.jpeg")
+    # add_vaccine("Polio Vaccine", "Protects against poliovirus, preventing paralysis and complications.", "https://w.ndtvimg.com/sites/3/2023/06/15175352/polio.jpg")
+    # add_vaccine("Rabies Vaccine", "Prevents rabies infection after animal bites or exposure.", "https://www.annapharmacy.com/wp-content/uploads/2023/08/How-Long-Does-An-Anti-Rabies-Vaccine-Provide-Immunity-In-Humans-scaled.webp")
+    # add_vaccine("Tetanus Vaccine", "Protects against tetanus, a serious bacterial infection.", "https://komonews.com/resources/media/7f9d1abc-2cdb-4622-8ebe-5e87bcafb623-TetanusShot_August.jpg")
+    # add_vaccine("Hepatitis B Vaccine", "Prevents hepatitis B virus infection and liver complications.", "https://medicaldialogues.in/h-upload/2025/03/25/280095-hepatitis-b-vaccine.webp")
     show_contents()
     print("Contents of the users table:")

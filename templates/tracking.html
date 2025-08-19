@@ -161,7 +161,7 @@
   // Distance & ETA
   const distanceMeters = map.distance([homeLat, homeLng], [targetLat, targetLng]);
   const distanceKm = distanceMeters / 1000;
-  const speedKmh = 100;
+  const speedKmh = 80;
   const etaHours = distanceKm / speedKmh;
   const durationMs = etaHours * 3600 * 1000;
 

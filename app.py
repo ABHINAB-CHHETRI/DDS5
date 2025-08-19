@@ -182,14 +182,32 @@ def tracking():
             "vaccine_type": vaccine_type,
             "latitude": latitude,
             "longitude": longitude,
-            "distance": f"{distance:.2f} km"
+            "distance": f"{distance:.2f}"
         }
 
         if distance > 15:
             return render_template("user_dashboard.html", error="Drone is too far from the home location.")
-        elif distance < 0.5:
-            return render_template("user_dashboard.html", error="Drone is too close to the home location.")
         else:
+            # Find vaccine_id from session vaccines
+            vaccine_id = None
+            for vaccine in session.get('vaccines', []):
+                if vaccine['name'] == vaccine_type:
+                    vaccine_id = vaccine['id']
+                    break
+            # Save tracking info to database
+            conn = get_db_connection()
+            if conn:
+                try:
+                    with conn.cursor() as cursor:
+                        cursor.execute(
+                            "INSERT INTO deliveries (user_email, vaccine_id, latitude, longitude, distance_km) VALUES (%s, %s, %s, %s, %s)",
+                            (session.get('user_email'), vaccine_id, lat2, lon2, distance)
+                        )
+                    conn.commit()
+                except Exception as e:
+                    print(f"Error saving tracking info: {e}")
+                finally:
+                    conn.close()
             return render_template("tracking.html", data=data)
     return render_template('tracking.html')
 

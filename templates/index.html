@@ -1,55 +1,119 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Drone Dispatch System (DDS)</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Montserrat:wght@300;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Montserrat:wght@300;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn.ghost {
+            background: transparent;
+            color: #007bff;
+            border: 2px solid #007bff;
+        }
+        .btn.ghost:hover {
+            background: #007bff;
+            color: white;
+        }
+        .btn-signin,
+        .btn-signup {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-right: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-signup {
+            background-color: #28a745;
+        }
+        .btn-signin:hover {
+            background-color: #0056b3;
+        }
+        .btn-signup:hover {
+            background-color: #218838;
+        }
+        #signup {
+            display: none;
+        }
+        .error-msg {
+            color: #d90429;
+            font-size: 0.95em;
+            margin: 4px 0 0 0;
+            display: block;
+        }
+        .auth-actions {
+            margin-top: 16px;
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+    <script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+            return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+            if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+                try {
+                    var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                    var firstSheetName = workbook.SheetNames[0];
+                    var worksheet = workbook.Sheets[firstSheetName];
+                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                    var filteredData = jsonData.filter(row => row.some(filledCell));
+                    var headerRowIndex = filteredData.findIndex((row, index) =>
+                        row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                    );
+                    if (headerRowIndex === -1 || headerRowIndex > 25) {
+                        headerRowIndex = 0;
+                    }
+                    var csvSheet = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+                    var csv = XLSX.utils.sheet_to_csv(csvSheet, { header: 1 });
+                    return csv;
+                } catch (e) {
+                    console.error(e);
+                    return "";
+                }
+            }
+            return gk_fileData[filename] || "";
+        }
+        function toggle(form) {
+            document.getElementById('signin').style.display = (form === 'signin') ? 'block' : 'none';
+            document.getElementById('signup').style.display = (form === 'signup') ? 'block' : 'none';
+        }
+        window.addEventListener('DOMContentLoaded', function () {
+            {% if signup_error %}
+                toggle('signup');
+            {% else %}
+                toggle('signin');
+            {% endif %}
+        });
+    </script>
 </head>
+
 <body>
     <nav class="nav-wrap">
         <div class="container nav">
@@ -70,14 +134,16 @@
         <div class="container hero-inner">
             <div class="hero-copy">
                 <h1>Saving Lives with Drone Technology</h1>
-                <p class="lede">Drone Dispatch System (DDS) delivers emergency medical supplies fast, safe, and reliable using autonomous drones.</p>
+                <p class="lede">Drone Dispatch System (DDS) delivers emergency medical supplies fast, safe, and reliable
+                    using autonomous drones.</p>
                 <div class="cta">
                     <a href="#login" class="btn">Login</a>
                     <a href="#tech-stack" class="btn ghost">Learn More</a>
                 </div>
             </div>
             <div class="hero-image">
-                <img src="{{ url_for('static', filename='photos/into_image.png') }}" alt="Hero Image" width="500" height="400">
+                <img src="{{ url_for('static', filename='photos/into_image.png') }}" alt="Hero Image" width="500"
+                    height="400">
             </div>
         </div>
     </section>
@@ -192,31 +258,73 @@
         </div>
     </section>
 
-    <section id="login" class="pad-block auth">
-    <div class="container">
-        <h2>Login</h2>
-        <p class="lede">Access your Drone Dispatch System (DDS) dashboard</p>
-        {% if error %}
-            <p style="color: #d90429;">{{ error }}</p>
-        {% endif %}
-        <form method="POST" action="/login">
-            <label>
-                Email
-                <input type="text" name="email" placeholder="Enter your email">
-            </label>
-            <label>
-                Password
-                <input type="password" name="password" placeholder="Enter your password">
-            </label>
-            <label>
-                Access Token
-                <input type="text" name="access_token" placeholder="Enter your access token">
-            </label>
-            <button type="submit" class="btn">Login</button>
-        </form>
-    </div>
-</section>
+    <section id="signin" class="pad-block auth">
+        <div class="container">
+            <h2>Login</h2>
+            <p class="lede">Access your Drone Dispatch System (DDS) dashboard</p>
+            {% if error %}
+            <p class="error-msg">{{ error }}</p>
+            {% endif %}
+            <form method="POST" action="/login">
+                <label>
+                    Email
+                    {% if email_error %}
+                    <span class="error-msg">{{ email_error }}</span>
+                    {% endif %}
+                    <input type="text" name="email" placeholder="Enter your email" value="{{ email if email else '' }}">
+                </label>
+                <label>
+                    Password
+                    {% if password_error %}
+                    <span class="error-msg">{{ password_error }}</span>
+                    {% endif %}
+                    <input type="password" name="password" placeholder="Enter your password">
+                </label>
+                <div class="auth-actions">
+                    <button type="submit" class="btn-signin">Login</button>
+                    <button type="button" class="btn-signup" onclick="toggle('signup')">Sign Up</button>
+                </div>
+            </form>
+        </div>
+    </section>
 
+    <section id="signup" class="pad-block auth">
+        <div class="container">
+            <h2>Sign Up</h2>
+            <p class="lede">Create your Drone Dispatch System (DDS) dashboard</p>
+            {% if error %}
+            <p class="error-msg">{{ error }}</p>
+            {% endif %}
+            <form method="POST" action="/register">
+                <label>
+                    Email
+                    {% if email_error %}
+                    <span class="error-msg">{{ email_error }}</span>
+                    {% endif %}
+                    <input type="text" name="email_" placeholder="Enter your email" value="{{ email if email else '' }}">
+                </label>
+                <label>
+                    Password
+                    {% if password_error %}
+                    <span class="error-msg">{{ password_error }}</span>
+                    {% endif %}
+                    <input type="password" name="password_" placeholder="Enter your password" value="{{ password if password else '' }}">
+                </label>
+                <label>
+                    Access Token
+                    {% if access_token_error %}
+                    <span class="error-msg">{{ access_token_error }}</span>
+                    {% endif %}
+                    <input type="text" name="access_token" placeholder="Enter your access token" value="{{ access_token if access_token else '' }}">
+                </label>
+                <div class="auth-actions">
+                    <button type="submit" class="btn-signup">Sign Up</button>
+                    <button type="button" class="btn-signin" onclick="toggle('signin')">Sign In</button>
+                </div>
+            </form>
+        </div>
+    </section>
+    
     <footer class="footer">
         <div class="container">
             <p>© 2025 Drone Dispatch System (DDS) — Drone Devs</p>

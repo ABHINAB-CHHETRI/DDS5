@@ -148,12 +148,14 @@
       background: linear-gradient(90deg, #1565c0 0%, #1976d2 100%);
       transform: scale(1.05);
     }
+
     .error {
       color: red;
       text-align: center;
       font-size: 1.2rem;
       margin-top: 20px;
     }
+
     .error::before {
       content: "⚠️ ";
       font-size: 1.5rem;
@@ -162,75 +164,41 @@
 </head>
 
 <body>
-  
-    {% if error %}
-    <h3 class="error">{{ error }}</h3>
-    {% endif %}
+
   <h1>Drone Dispatch System</h1>
+  {% if error %}
+  <h3 class="error">{{ error }}</h3>
+  {% endif %}
+  {% if vaccine_error %}
+  <h3 class="error">{{ vaccine_error }}</h3>
+  {% endif %}
+  {% if location_error %}
+  <h3 class="error">{{ location_error }}</h3>
+  {% endif %}
   <form method="POST" action="/tracking" class="cards">
 
     <!-- Left side vaccines -->
     <div class="vaccine-card">
-      <input type="radio" id="antiVenom" name="vaccine" value="Anti Venom" required>
-      <label for="antiVenom">
+      {% for vaccine in session.get('vaccines', []) %}
+      <input type="radio" id="vaccine{{ loop.index }}" name="vaccine" value="{{ vaccine.name }}">
+      <label for="vaccine{{ loop.index }}">
         <div class="box">
-          <h3>Anti Venom</h3>
-          <img src="https://tse2.mm.bing.net/th/id/OIP.XFgww_A6-E7UQRzImsgo3QHaE8?rs=1&pid=ImgDetMain&o=7&rm=3" alt="vaccine">
-          <p>Used to treat venomous bites and stings from snakes and insects.</p>
+          <h3>{{ vaccine.name }}</h3>
+          <img src="{{ vaccine.image_url }}" alt="vaccine">
+          <p>{{ vaccine.description }}</p>
         </div>
       </label>
-
-      <input type="radio" id="measles" name="vaccine" value="Measles Vaccine">
-      <label for="measles">
-        <div class="box">
-          <h3>Measles Vaccine</h3>
-          <img src="https://tse2.mm.bing.net/th/id/OIP.XFgww_A6-E7UQRzImsgo3QHaE8?rs=1&pid=ImgDetMain&o=7&rm=3" alt="vaccine">
-          <p>Prevents measles, a highly contagious viral disease.</p>
-        </div>
-      </label>
-
-      <input type="radio" id="polio" name="vaccine" value="Polio Vaccine">
-      <label for="polio">
-        <div class="box">
-          <h3>Polio Vaccine</h3>
-          <img src="https://tse2.mm.bing.net/th/id/OIP.XFgww_A6-E7UQRzImsgo3QHaE8?rs=1&pid=ImgDetMain&o=7&rm=3" alt="vaccine">
-          <p>Protects against poliovirus, preventing paralysis and complications.</p>
-        </div>
-      </label>
-
-      <input type="radio" id="rabies" name="vaccine" value="Rabies Vaccine">
-      <label for="rabies">
-        <div class="box">
-          <h3>Rabies Vaccine</h3>
-          <img src="https://tse2.mm.bing.net/th/id/OIP.XFgww_A6-E7UQRzImsgo3QHaE8?rs=1&pid=ImgDetMain&o=7&rm=3" alt="vaccine">
-          <p>Prevents rabies infection after animal bites or exposure.</p>
-        </div>
-      </label>
-
-      <input type="radio" id="tetanus" name="vaccine" value="Tetanus Vaccine">
-      <label for="tetanus">
-        <div class="box">
-          <h3>Tetanus Vaccine</h3>
-          <img src="https://tse2.mm.bing.net/th/id/OIP.XFgww_A6-E7UQRzImsgo3QHaE8?rs=1&pid=ImgDetMain&o=7&rm=3" alt="vaccine">
-          <p>Protects against tetanus, a serious bacterial infection.</p>
-        </div>
-      </label>
-
-      <input type="radio" id="hepB" name="vaccine" value="Hepatitis B Vaccine">
-      <label for="hepB">
-        <div class="box">
-          <h3>Hepatitis B Vaccine</h3>
-          <img src="https://tse2.mm.bing.net/th/id/OIP.XFgww_A6-E7UQRzImsgo3QHaE8?rs=1&pid=ImgDetMain&o=7&rm=3" alt="vaccine">
-          <p>Prevents hepatitis B virus infection and liver complications.</p>
-        </div>
-      </label>
+      {% endfor %}
     </div>
 
     <!-- Right side -->
     <div class="other-card">
+
       <div id="map" class="map"></div>
       <input type="text" id="latitude" name="lat" placeholder="Latitude" readonly required>
+      <br>
       <input type="text" id="longitude" name="lng" placeholder="Longitude" readonly required>
+      <br>
       <button type="submit">Dispatch</button>
     </div>
   </form>
@@ -264,4 +232,5 @@
     });
   </script>
 </body>
+
 </html>

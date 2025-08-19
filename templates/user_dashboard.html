@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Dashboard</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        background: linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%);
+        margin: 0;
+        padding: 30px;
+      }
+      h1 {
+        text-align: center;
+        color: #1a237e;
+        letter-spacing: 2px;
+        margin-bottom: 30px;
+        font-weight: 700;
+        font-size: 2.2rem;
+      }
+      .cards {
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        margin-top: 30px;
+        flex-wrap: wrap;
+      }
+      .vaccine-card,
+      .other-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 6px 24px rgba(30, 64, 175, 0.12);
+        padding: 28px 24px;
+        max-width: 370px;
+        flex: 1 1 340px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: box-shadow 0.2s;
+      }
+      .vaccine-card:hover,
+      .other-card:hover {
+        box-shadow: 0 12px 32px rgba(30, 64, 175, 0.18);
+      }
+      .vaccines {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        justify-content: center;
+        margin-bottom: 24px;
+        width: 100%;
+      }
+      .box {
+        background: linear-gradient(90deg, #e3f0ff 0%, #f7fbff 100%);
+        border-radius: 8px;
+        padding: 18px 0;
+        width: 46%;
+        min-width: 130px;
+        text-align: center;
+        box-sizing: border-box;
+        font-weight: 500;
+        color: #1565c0;
+        box-shadow: 0 2px 8px rgba(21, 101, 192, 0.07);
+        transition: background 0.2s;
+      }
+      .box:hover {
+        background: linear-gradient(90deg, #bbdefb 0%, #e3f0ff 100%);
+        color: #0d47a1;
+      }
+      .map {
+        text-align: center;
+        width: 100%;
+      }
+      .map img {
+        width: 100%;
+        border-radius: 12px;
+        max-width: 320px;
+        box-shadow: 0 4px 16px rgba(21, 101, 192, 0.09);
+        border: 2px solid #e3f0ff;
+        margin-bottom: 20px;
+      }
+      .dispatch-btn {
+        padding: 12px 32px;
+        background: linear-gradient(90deg, #1976d2 0%, #64b5f6 100%);
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 1.08rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(25, 118, 210, 0.13);
+        transition: background 0.2s, box-shadow 0.2s;
+        width: 100%;
+      }
+      .dispatch-btn:hover {
+        background: linear-gradient(90deg, #1565c0 0%, #1976d2 100%);
+        box-shadow: 0 4px 16px rgba(25, 118, 210, 0.18);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Drone Dispatch System</h1>
+    <div class="cards">
+      <!-- Left side: Vaccine Card -->
+      <div class="vaccine-card">
+        <div class="vaccines">
+          <div class="box"><p>Vaccine 1</p></div>
+          <div class="box"><p>Vaccine 2</p></div>
+          <div class="box"><p>Vaccine 3</p></div>
+          <div class="box"><p>Vaccine 4</p></div>
+          <div class="box"><p>Vaccine 5</p></div>
+          <div class="box"><p>Vaccine 6</p></div>
+        </div>
+      </div>
+
+      <!-- Right side: Other Card -->
+      <div class="other-card">
+        <div class="map">
+          <img
+            src="https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg"
+            alt="Dashboard Map"
+          />
+        </div>
+        <button class="dispatch-btn">Dispatch</button>
+      </div>
+    </div>
+  </body>
+</html>

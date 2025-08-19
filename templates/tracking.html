@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tracking</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f6f8fa;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #2d3748;
+      color: #fff;
+      padding: 1.5rem 0;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .hero {
+      width: 90%;
+      height: 400px;
+      overflow: hidden;
+      border-radius: 50px;
+      margin-left: 100px;
+    }
+    .hero img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover; /* keeps image aspect while covering */
+    }
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      padding: 0 1rem;
+    }
+    .info-box {
+      flex: 1 1 500px;
+      background: #fff;
+      border-radius: 8px;
+      padding: 2rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    }
+    h1, h2, h3 {
+      margin-top: 0;
+    }
+    h2 {
+      color: #2563eb;
+    }
+    h3 {
+      color: #16a34a;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Drone Dispatch System</h1>
+  </header>
+
+  <!-- Full width image section -->
+  <div class="hero">
+    <img
+      src="https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg"
+      alt="Dashboard Map"
+    />
+  </div>
+
+  <!-- Info Section -->
+  <div class="container">
+    <div class="info-box">
+      <h2>Delivery Information</h2>
+      <p>Lorem ipsum dolor sit amet.</p>
+      <p>Consectetur adipiscing elit.</p>
+      <p>Integer nec odio. Praesent libero.</p>
+    </div>
+
+    <div class="info-box">
+      <h3>Main Drone Script</h3>
+      <p>Drone automation script details will go here...</p>
+    </div>
+  </div>
+</body>
+</html>

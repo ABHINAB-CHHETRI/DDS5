@@ -160,6 +160,7 @@
       content: "⚠️ ";
       font-size: 1.5rem;
     }
+
     .past_deliveries {
       margin-top: 40px;
       background: #fff;
@@ -167,27 +168,34 @@
       box-shadow: 0 6px 24px rgba(30, 64, 175, 0.12);
       padding: 20px;
     }
+
     .past_deliveries h2 {
       text-align: center;
       color: #1976d2;
       margin-bottom: 20px;
     }
+
     .past_deliveries table {
       width: 100%;
       border-collapse: collapse;
     }
-    .past_deliveries th, .past_deliveries td {
+
+    .past_deliveries th,
+    .past_deliveries td {
       padding: 12px;
       text-align: center;
       border-bottom: 1px solid #ddd;
     }
+
     .past_deliveries th {
       background: #f0f0f0;
       color: #1976d2;
     }
+
     .past_deliveries td {
       color: #555;
     }
+
     .past_deliveries tr:hover {
       background: #f9f9f9;
     }
@@ -259,7 +267,7 @@
           </td>
           <td>
             ( <span title="Latitude, Longitude">
-              <span style="color:#1976d2;">{{ delivery.latitude }}</span>, 
+              <span style="color:#1976d2;">{{ delivery.latitude }}</span>,
               <span style="color:#1976d2;">{{ delivery.longitude }}</span>
             </span>)
           </td>

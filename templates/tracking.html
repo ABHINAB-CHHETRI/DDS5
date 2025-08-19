@@ -140,8 +140,8 @@
   const homeLat = 30.3529, homeLng = 76.3637;
 
   // Target coordinates from Flask template (fallback = home)
-  const targetLat = {{ data.latitude|default(homeLat) }},
-        targetLng = {{ data.longitude|default(homeLng) }};
+  const targetLat = {{ data.latitude|default (homeLat) }},
+  targetLng = {{ data.longitude |default (homeLng) }};
 
   // Initialize map
   const map = L.map('map').setView([homeLat, homeLng], 12);
@@ -200,14 +200,14 @@
 
     if (progress < 1) {
       requestAnimationFrame(animateDrone);
-    }else {
-  droneMarker.bindPopup("Drone Arrived!").openPopup();
+    } else {
+      droneMarker.bindPopup("Drone Arrived!").openPopup();
 
-  // Call backend to mark delivery as delivered
-  fetch("/mark_delivered", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ delivery_id: {{ data.delivery_id }} })
+      // Call backend to mark delivery as delivered
+      fetch("/mark_delivered", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ delivery_id: {{ data.delivery_id }} })
   });
 }
 

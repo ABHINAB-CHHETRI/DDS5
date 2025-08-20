@@ -213,13 +213,26 @@ def tracking():
                     break
             # Save tracking info to database
             conn = get_db_connection()
+            token= ''.join(__import__('random').choices('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', k=10))
             if conn:
                 try:
                     print(f"Saving tracking info: {data}")
                     with conn.cursor() as cursor:
                         cursor.execute(
-                            "INSERT INTO deliveries (user_mail, vaccine_id, latitude, longitude, distance_km, status) VALUES (%s, %s, %s, %s, %s, %s)",
-                            (session.get('user_email'), vaccine_id, lat2, lon2, distance, "Created")
+                            """
+                            INSERT INTO deliveries (
+                                user_mail, vaccine_id, latitude, longitude, distance_km, status, delivery_token
+                            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                            """,
+                            (
+                                session.get('user_email'),
+                                vaccine_id,
+                                lat2,
+                                lon2,
+                                distance,
+                                "Created",
+                                token
+                            )
                         )
                         delivery_id = cursor.lastrowid
                     conn.commit()
@@ -230,9 +243,34 @@ def tracking():
                     print(f"Error saving tracking info: {e}")
                 finally:
                     conn.close()
-            return render_template("tracking.html", data=data)
+            return render_template("tracking.html", data=data,token=token)
     return render_template('tracking.html')
 
+
+
+@app.route('/delivery/<int:delivery_id>/verify_token', methods=['POST'])
+def verify_token(delivery_id):
+    data = request.get_json()
+    token = data.get('token')
+    print(f"Received token verification request: delivery_id={delivery_id}, token={token}")
+    import time
+    # Replace with your actual token validation logic
+    # For example, compare with a stored token for this delivery
+    conn= get_db_connection()
+    if not conn:
+        print("DB connection failed")
+        return jsonify({"error": "DB connection failed"}), 500
+    cursor= conn.cursor()
+    cursor.execute("SELECT delivery_token FROM deliveries WHERE id = %s", (delivery_id,))
+    result = cursor.fetchone()
+    expected_token = result['delivery_token'] if result else None
+    if token == expected_token:
+        return jsonify({'valid': True})
+    else:
+        return jsonify({'valid': False})
+    
+    
+    
 @app.route('/delivery/<int:delivery_id>/update_status', methods=['POST'])
 def update_delivery_status(delivery_id):
     status = request.json.get('status')
@@ -397,21 +435,25 @@ def add_admin():
         conn.close()
     return redirect(url_for('admin_dashboard'))
     
-@app.route('/update_delivery/<int:delivery_id>', methods=['POST'])
-def update_delivery(delivery_id):
+        
+@app.route('/delete_delivery/<int:delivery_id>', methods=['POST'])
+def delete_delivery(delivery_id):
     conn = get_db_connection()
     if not conn:
-        return jsonify({"error": "Database connection error."}), 500
+        return render_template('dashboard.html', error="Database connection error.")
     try:
         with conn.cursor() as cursor:
-            cursor.execute("UPDATE deliveries SET status='Delivered' WHERE id = %s", (delivery_id,))
+            cursor.execute("DELETE FROM deliveries WHERE id = %s", (delivery_id,))
         conn.commit()
-        return redirect(url_for('admin_dashboard'))
     except Exception as e:
-        print(f"Error updating delivery: {e}")
-        return jsonify({"error": str(e)}), 500
+        print(f"Error deleting delivery: {e}")
+        return render_template('dashboard.html', error="Failed to delete delivery.")
     finally:
         conn.close()
+    print("Delivery deleted successfully.")
+    return redirect(url_for('admin_dashboard'))
+        
+
 @app.route('/admin_dashboard')
 def admin_dashboard():
     connection= get_db_connection()
@@ -426,9 +468,13 @@ def admin_dashboard():
     users = cursor.fetchall()
     cursor.execute("SELECT * FROM admin")
     admins = cursor.fetchall()
-    cursor.execute("select count(*) from deliveries where status='Delivered'")
+    cursor.execute("select count(*) from deliveries")
+    total_requests= cursor.fetchone()['count(*)']
+    cursor.execute("select count(*) from deliveries where status in ('dispatching vaccine', 'delivered', 'returning to home station')")
     total_deliveries = cursor.fetchone()['count(*)']
-    x=len(deliveries) - total_deliveries
+    cursor.execute("select count(*) from deliveries where status in ('token failed', 'delivery failed')")
+    failed_deliveries = cursor.fetchone()['count(*)']
+    x=total_requests - total_deliveries-failed_deliveries
     cursor.close()
     messages = {
         "vaccines": vaccines,
@@ -438,7 +484,9 @@ def admin_dashboard():
         "total_users": len(users),
         "total_drones": 1,
         "total_deliveries": total_deliveries,
-        "pending_deliveries": max(x, 0)
+        "pending_deliveries": max(x, 0),
+        "total_requests": total_requests,
+        "failed_deliveries": failed_deliveries
     }
     return render_template('dashboard.html',**messages )
 

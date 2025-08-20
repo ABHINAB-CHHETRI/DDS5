@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Dashboard</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%);
+      margin: 0;
+      padding: 30px;
+    }
+
+    h1 {
+      text-align: center;
+      color: crimson;
+      letter-spacing: 7px;
+      margin-bottom: 30px;
+      font-weight: 700;
+      font-size: 2.2rem;
+    }
+
+    .cards {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+
+    /* Vaccine grid */
+    .vaccine-card {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+      flex: 1 1 500px;
+    }
+
+    .box {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+      padding: 18px 20px;
+      text-align: center;
+      transition: all 0.25s ease;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+
+    .box img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    .box h3 {
+      margin: 10px 0;
+      color: #1976d2;
+      font-size: 1.2rem;
+    }
+
+    .box p {
+      font-size: 0.9rem;
+      color: #444;
+    }
+
+    /* Hover & selection effect */
+    .box:hover {
+      transform: translateY(-6px) scale(1.03);
+      box-shadow: 0 10px 26px rgba(25, 118, 210, 0.25);
+    }
+
+    input[type="radio"] {
+      display: none;
+    }
+
+    input[type="radio"]:checked+label .box {
+      border: 2px solid #1976d2;
+      box-shadow: 0 0 12px rgba(25, 118, 210, 0.4);
+    }
+
+    /* Right side */
+    .other-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 6px 24px rgba(30, 64, 175, 0.12);
+      padding: 20px;
+      max-width: 650px;
+      flex: 1 1 340px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .map {
+      width: 100%;
+      height: 400px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    form {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+    }
+
+    .vaccine-card {
+      flex: 1 1 500px;
+    }
+
+    .other-card form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+
+    input[type="text"] {
+      padding: 8px;
+      width: 80%;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 12px 32px;
+      background: linear-gradient(90deg, #1976d2 0%, #64b5f6 100%);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 1.08rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 80%;
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      background: linear-gradient(90deg, #1565c0 0%, #1976d2 100%);
+      transform: scale(1.05);
+    }
+
+    .error {
+      color: red;
+      text-align: center;
+      font-size: 1.2rem;
+      margin-top: 20px;
+    }
+
+    .error::before {
+      content: "⚠️ ";
+      font-size: 1.5rem;
+    }
+
+    .past_deliveries {
+      margin-top: 40px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 6px 24px rgba(30, 64, 175, 0.12);
+      padding: 20px;
+    }
+
+    .past_deliveries h2 {
+      text-align: center;
+      color: #1976d2;
+      margin-bottom: 20px;
+    }
+
+    .past_deliveries table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .past_deliveries th,
+    .past_deliveries td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .past_deliveries th {
+      background: #f0f0f0;
+      color: #1976d2;
+    }
+
+    .past_deliveries td {
+      color: #555;
+    }
+
+    .past_deliveries tr:hover {
+      background: #f9f9f9;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Drone Dispatch System</h1>
+  {% if error %}
+  <h3 class="error">{{ error }}</h3>
+  {% endif %}
+  {% if vaccine_error %}
+  <h3 class="error">{{ vaccine_error }}</h3>
+  {% endif %}
+  {% if location_error %}
+  <h3 class="error">{{ location_error }}</h3>
+  {% endif %}
+
+  <form method="POST" action="/tracking" class="cards">
+
+    <!-- Left side vaccines -->
+    <div class="vaccine-card">
+      {% for vaccine in session.get('vaccines', []) %}
+      <input type="radio" id="vaccine{{ loop.index }}" name="vaccine" value="{{ vaccine.name }}">
+      <label for="vaccine{{ loop.index }}">
+        <div class="box">
+          <h3>{{ vaccine.name }}</h3>
+          <img src="{{ vaccine.image_url }}" alt="vaccine">
+          <p>{{ vaccine.description }}</p>
+        </div>
+      </label>
+      {% endfor %}
+    </div>
+
+    <!-- Right side -->
+    <div class="other-card">
+
+      <div id="map" class="map"></div>
+      <input type="text" id="latitude" name="lat" placeholder="Latitude" readonly required>
+      <br>
+      <input type="text" id="longitude" name="lng" placeholder="Longitude" readonly required>
+      <br>
+      <button type="submit">Dispatch</button>
+    </div>
+  </form>
+  <div class="past_deliveries">
+    <h2>Past Deliveries</h2>
+    {% if session['deliveries'] %}
+    <table>
+      <thead>
+        <tr>
+          <th>Delivery ID</th>
+          <th>Vaccine</th>
+          <th>Location</th>
+          <th>Distance (km)</th>
+          <th>Date & Time</th>
+          <th>Status</th>
+
+        </tr>
+      </thead>
+      <tbody>
+        {% for delivery in session['deliveries'] %}
+        <tr>
+          <td>{{ delivery.id }}</td>
+          <td>
+            <strong>{{ delivery.vaccine_name }}</strong><br>
+            <span style="color:#888;font-size:0.95em;">ID: {{ delivery.vaccine_id }}</span>
+          </td>
+          <td>
+            ( <span title="Latitude, Longitude">
+              <span style="color:#1976d2;">{{ delivery.latitude }}</span>,
+              <span style="color:#1976d2;">{{ delivery.longitude }}</span>
+            </span>)
+          </td>
+          <td>{{ delivery.distance_km }}</td>
+          <td>{{ delivery.created_at }}</td>
+          <td>{{ delivery.status }}</td>
+
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="text-align:center;color:#888;">No past deliveries found.</p>
+    {% endif %}
+  </div>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([30.3529, 76.3637], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    L.marker([30.3529, 76.3637]).addTo(map).bindPopup("Home Station").openPopup();
+
+    L.circle([30.3529, 76.3637], {
+      radius: 15000,
+      color: "blue",
+      fillColor: "#80c0ff",
+      fillOpacity: 0.2
+    }).addTo(map);
+
+    let userMarker;
+    map.on('click', function (e) {
+      if (userMarker) map.removeLayer(userMarker);
+      userMarker = L.marker(e.latlng).addTo(map)
+        .bindPopup(`Selected: ${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`)
+        .openPopup();
+
+      document.getElementById("latitude").value = e.latlng.lat.toFixed(5);
+      document.getElementById("longitude").value = e.latlng.lng.toFixed(5);
+    });
+  </script>
+</body>
+
+</html>

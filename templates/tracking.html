@@ -143,9 +143,11 @@
   const targetLat = {{ data.latitude|default (homeLat) }},
   targetLng = {{ data.longitude |default (homeLng) }};
 
-  // Initialize map
-  const map = L.map('map').setView([homeLat, homeLng], 12);
+  // Delivery ID
+  const deliveryId = {{ data.delivery_id if data and data.delivery_id is not none else 'null' }};
 
+  // Map initialization
+  const map = L.map('map').setView([homeLat, homeLng], 12);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
   }).addTo(map);
@@ -174,7 +176,68 @@
 
   const droneMarker = L.marker([homeLat, homeLng], { icon: droneIcon }).addTo(map);
 
-  // Animation
+  // Status helpers
+  function updateStatus(message) {
+    document.getElementById("eta").innerText = message;
+    droneMarker.bindPopup(message).openPopup();
+  }
+
+  function postStatus(status) {
+    if (!deliveryId || isNaN(deliveryId)) {
+      console.error('Invalid deliveryId:', deliveryId);
+      return;
+    }
+    console.log('Sending status update:', { deliveryId, status });
+    fetch(`/delivery/${deliveryId}/update_status`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (!data.success) {
+          console.error('Status update failed:', data);
+        } else {
+          console.log('Status updated:', data);
+        }
+      })
+      .catch(error => {
+        console.error('Fetch error:', error);
+      });
+  }
+
+  // Animate gaining height
+  function animateGainingHeight(duration = 2000, callback) {
+    let start = null;
+    function step(timestamp) {
+      if (!start) start = timestamp;
+      const elapsed = timestamp - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const size = 40 + Math.floor(progress * 20); // from 40 to 60
+      droneMarker.setIcon(
+        L.icon({
+          iconUrl: "static/icons/drone.ico",
+          iconSize: [size, size],
+          iconAnchor: [size / 2, size / 2],
+        })
+      );
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      } else {
+        droneMarker.setIcon(
+          L.icon({
+            iconUrl: "static/icons/drone.ico",
+            iconSize: [60, 60],
+            iconAnchor: [30, 30],
+          })
+        );
+        if (callback) callback();
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  // Animate drone movement
   let startTime = null;
   function animateDrone(timestamp) {
     if (!startTime) startTime = timestamp;
@@ -184,7 +247,6 @@
     // Interpolate position
     const lat = homeLat + (targetLat - homeLat) * progress;
     const lng = homeLng + (targetLng - homeLng) * progress;
-
     droneMarker.setLatLng([lat, lng]);
 
     // Update ETA countdown
@@ -196,24 +258,112 @@
         `ETA: ${minutes}m ${seconds}s (Speed: ${speedKmh} km/h, Distance: ${distanceKm.toFixed(2)} km)`;
     } else {
       document.getElementById("eta").innerText = "Drone Arrived!";
+      droneMarker.bindPopup("Drone Arrived!").openPopup();
+      postStatus("drone arrived");
+      afterArrival();
+      return;
+    }
+
+    // Dynamic map view
+    if (distanceKm < 2) {
+      map.fitBounds([[homeLat, homeLng], [targetLat, targetLng]], { animate: true, padding: [40, 40] });
+    } else {
+      if (progress === 0) {
+        map.setView([homeLat, homeLng], 15, { animate: true });
+      } else if (progress > 0 && progress < 1) {
+        const zoom = Math.max(12, 15 - progress * 3);
+        map.setView([droneMarker.getLatLng().lat, droneMarker.getLatLng().lng], zoom, { animate: true });
+      } else if (progress === 1) {
+        map.setView([targetLat, targetLng], 15, { animate: true });
+      }
     }
 
     if (progress < 1) {
       requestAnimationFrame(animateDrone);
-    } else {
-      droneMarker.bindPopup("Drone Arrived!").openPopup();
-
-      // Call backend to mark delivery as delivered
-      fetch("/mark_delivered", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ delivery_id: {{ data.delivery_id }} })
-  });
-}
-
+    }
   }
 
-  requestAnimationFrame(animateDrone);
+  // After arrival: landing, dispatch, return, final delivered after home
+  function afterArrival() {
+    document.getElementById("eta").innerText = "Landing...";
+    droneMarker.bindPopup("Landing...").openPopup();
+    postStatus("Drone Landing");
+
+    setTimeout(() => {
+      document.getElementById("eta").innerText = "Dispatching vaccine...";
+      droneMarker.bindPopup("Dispatching vaccine...").openPopup();
+      postStatus("dispatching vaccine");
+
+      setTimeout(() => {
+        document.getElementById("eta").innerText = "Returning to Home Station...";
+        droneMarker.bindPopup("Returning to Home Station...").openPopup();
+        postStatus("returning to home station");
+
+        // Animate return and show "Delivered" after arriving home
+        animateReturn();
+        setTimeout(() => {
+          document.getElementById("eta").innerText = "Delivered!!!!";
+          droneMarker.bindPopup("Delivered!!!!").openPopup();
+          postStatus("Delivered");
+        }, durationMs); // Wait for drone to finish returning
+      }, 2000);
+    }, 2000);
+  }
+
+  // Animate drone returning to home
+  function animateReturn() {
+    let returnStart = null;
+    function step(timestamp) {
+      if (!returnStart) returnStart = timestamp;
+      const elapsed = timestamp - returnStart;
+      const progress = Math.min(elapsed / durationMs, 1);
+
+      // Interpolate back to home
+      const lat = targetLat + (homeLat - targetLat) * progress;
+      const lng = targetLng + (homeLng - targetLng) * progress;
+      droneMarker.setLatLng([lat, lng]);
+
+      // Update ETA countdown
+      const remainingMs = durationMs - elapsed;
+      if (remainingMs > 0) {
+        const minutes = Math.floor(remainingMs / 60000);
+        const seconds = Math.floor((remainingMs % 60000) / 1000);
+        document.getElementById("eta").innerText =
+          `Returning: ${minutes}m ${seconds}s`;
+      } else {
+        document.getElementById("eta").innerText = "Drone Returned Home!";
+        droneMarker.bindPopup("Drone Returned Home!").openPopup();
+      }
+
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  // Sequence: Assigned -> Gaining Height -> Heading to Target -> Animate
+  function startSequence() {
+    updateStatus("Drone Assigned...");
+    postStatus("drone assigned");
+
+    setTimeout(() => {
+      updateStatus("Gaining Height...");
+      postStatus("height gained");
+
+      animateGainingHeight(2000, () => {
+        updateStatus("Heading to Target...");
+        postStatus("heading to target");
+        setTimeout(() => {
+          startTime = null;
+          requestAnimationFrame(animateDrone);
+        }, 2000);
+      });
+    }, 2000);
+  }
+
+
+  startSequence();
 </script>
 
 </html>

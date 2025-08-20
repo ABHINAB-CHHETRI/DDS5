@@ -233,23 +233,39 @@ def tracking():
             return render_template("tracking.html", data=data)
     return render_template('tracking.html')
 
-@app.route('/mark_delivered', methods=['POST'])
-def mark_delivered():
-    delivery_id = request.json.get("delivery_id")
+@app.route('/delivery/<int:delivery_id>/update_status', methods=['POST'])
+def update_delivery_status(delivery_id):
+    status = request.json.get('status')
+    print(f"Received status update request: delivery_id={delivery_id}, status={status}")
+
+    # Accept and log all status values
+    allowed_statuses = [
+        'created', 'drone arrived', 'dispatched', 'drone assigned',
+        'attended max height', 'heading to target', 'landing',
+        'returning to home station', 'dispatching vaccine', 'Drone Landing',
+        'Drone Returned Home!'
+    ]
+    if status not in allowed_statuses:
+        print(f"Warning: Received unrecognized status '{status}' for delivery_id={delivery_id}")
+
     conn = get_db_connection()
     if not conn:
+        print("DB connection failed")
         return jsonify({"error": "DB connection failed"}), 500
     try:
         with conn.cursor() as cursor:
-            cursor.execute("UPDATE deliveries SET status=%s WHERE id=%s", ("Delivered", delivery_id))
+            print(f"Attempting to update delivery {delivery_id} status to '{status}'")
+            cursor.execute("UPDATE deliveries SET status=%s WHERE id=%s", (status, delivery_id))
+            print(f"Database update executed for delivery_id={delivery_id}")
         conn.commit()
-        return jsonify({"success": True, "delivery_id": delivery_id})
+        print(f"Database commit successful for delivery_id={delivery_id}")
+        return jsonify({"success": True, "delivery_id": delivery_id, "status": status})
     except Exception as e:
         print(f"Error updating delivery: {e}")
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
-        
+        print(f"Database connection closed for delivery_id={delivery_id}")
         
 @app.route('/add_vaccine', methods=['POST'])
 def add_vaccine():
@@ -412,17 +428,17 @@ def admin_dashboard():
     admins = cursor.fetchall()
     cursor.execute("select count(*) from deliveries where status='Delivered'")
     total_deliveries = cursor.fetchone()['count(*)']
-    
+    x=len(deliveries) - total_deliveries
     cursor.close()
-    messages={
+    messages = {
         "vaccines": vaccines,
         "deliveries": deliveries,
         "users": users,
         "admins": admins,
         "total_users": len(users),
-        "total_drones":  1,
+        "total_drones": 1,
         "total_deliveries": total_deliveries,
-        "pending_deliveries": len(deliveries) - total_deliveries
+        "pending_deliveries": max(x, 0)
     }
     return render_template('dashboard.html',**messages )
 

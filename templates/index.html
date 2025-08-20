@@ -10,49 +10,37 @@
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Montserrat:wght@300;600;700&display=swap"
         rel="stylesheet">
     <style>
-        .btn {
-            background-color: #007bff;
+        .btn,
+        .btn-signin,
+        .btn-signup {
+            background-color: #d90429;
             color: white;
             padding: 10px 20px;
             border: none;
             border-radius: 5px;
-            text-decoration: none;
             font-weight: bold;
             cursor: pointer;
             transition: background 0.2s;
+            text-decoration: none;
         }
-        .btn:hover {
-            background-color: #0056b3;
+        .btn:hover,
+        .btn-signin:hover,
+        .btn-signup:hover {
+            background-color: #de3a55;
         }
         .btn.ghost {
             background: transparent;
-            color: #007bff;
-            border: 2px solid #007bff;
+            color: #d90429;
+            border: 2px solid #d90429;
         }
         .btn.ghost:hover {
-            background: #007bff;
+            background: #d90429;
             color: white;
         }
-        .btn-signin,
-        .btn-signup {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            font-weight: bold;
-            margin-right: 10px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn-signup {
-            background-color: #28a745;
-        }
-        .btn-signin:hover {
-            background-color: #0056b3;
-        }
-        .btn-signup:hover {
-            background-color: #218838;
+        .auth-actions {
+            margin-top: 16px;
+            display: flex;
+            gap: 10px;
         }
         #signup {
             display: none;
@@ -63,10 +51,26 @@
             margin: 4px 0 0 0;
             display: block;
         }
-        .auth-actions {
-            margin-top: 16px;
-            display: flex;
-            gap: 10px;
+        #memberType {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d90429;
+            border-radius: 5px;
+            font-size: 1em;
+            margin-top: 4px;
+            margin-bottom: 12px;
+            background: #f8f9fa;
+            color: #333;
+            transition: border-color 0.2s;
+        }
+        select#memberType:focus {
+            border-color: #d90429;
+            outline: none;
+        }
+        label[for="membertype"] {
+            display: block;
+            margin-bottom: 16px;
+            font-weight: 600;
         }
     </style>
     <script type="text/javascript">
@@ -137,7 +141,7 @@
                 <p class="lede">Drone Dispatch System (DDS) delivers emergency medical supplies fast, safe, and reliable
                     using autonomous drones.</p>
                 <div class="cta">
-                    <a href="#login" class="btn">Login</a>
+                    <a href="#signin" class="btn">Login</a>
                     <a href="#tech-stack" class="btn ghost">Learn More</a>
                 </div>
             </div>
@@ -266,6 +270,17 @@
             <p class="error-msg">{{ error }}</p>
             {% endif %}
             <form method="POST" action="/login">
+                <label for="membertype">
+                    Member Type
+                    {% if membertype_error %}
+                    <span class="error-msg">{{ membertype_error }}</span>
+                    {% endif %}
+                    <select name="memberType" id="memberType">
+                        <option value="" disabled selected>Select your role</option>
+                        <option value="admin">Admin</option>
+                        <option value="user" selected>User</option>
+                    </select>
+                </label>
                 <label>
                     Email
                     {% if email_error %}

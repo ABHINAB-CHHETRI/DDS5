@@ -3,6 +3,7 @@ from math import radians, sin, cos, sqrt, atan2
 import os
 import dotenv
 import pymysql
+from flask import jsonify
 
 # Load environment variables
 dotenv.load_dotenv()
@@ -46,6 +47,7 @@ def home():
 def login():
     email = request.form.get('email', '').strip()
     password = request.form.get('password', '')
+    memberType=request.form.get('memberType', 'user')
     email_error = password_error = error = None
 
     if not email:
@@ -64,15 +66,27 @@ def login():
         return render_template('index.html', error=error, email=email, signup_error=False)
 
     try:
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT * FROM users WHERE email = %s AND password = %s", (email, password))
-            user = cursor.fetchone()
-        if not user:
-            error = "Invalid credentials"
-            return render_template('index.html', error=error, email=email, signup_error=False)
-        session['user_email'] = email
-        session['logged_in'] = True
-        return redirect(url_for('user_dashboard'))
+        if memberType=='user':
+            with conn.cursor() as cursor:
+
+                cursor.execute("SELECT * FROM users WHERE email = %s AND password = %s", (email, password))
+                user = cursor.fetchone()
+            if not user:
+                error = "Invalid credentials"
+                return render_template('index.html', error=error, email=email, signup_error=False)
+            session['user_email'] = email
+            session['logged_in'] = True
+            return redirect(url_for('user_dashboard'))
+        elif memberType=='admin':
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT * FROM admin WHERE email = %s AND password = %s", (email, password))
+                admin = cursor.fetchone()
+            if not admin:
+                error = "Invalid credentials"
+                return render_template('index.html', error=error, email=email, signup_error=False)
+            session['admin_email'] = email
+            session['logged_in'] = True
+            return redirect(url_for('admin_dashboard'))
     finally:
         conn.close()
 
@@ -218,7 +232,6 @@ def tracking():
                     conn.close()
             return render_template("tracking.html", data=data)
     return render_template('tracking.html')
-from flask import jsonify
 
 @app.route('/mark_delivered', methods=['POST'])
 def mark_delivered():
@@ -236,6 +249,187 @@ def mark_delivered():
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
+        
+        
+@app.route('/add_vaccine', methods=['POST'])
+def add_vaccine():
+    vaccine_name = request.form.get('vaccine_name', '').strip()
+    image_url = request.form.get('image_url', '').strip()
+    description = request.form.get('description', '').strip()
+    vaccine_name_error = image_url_error = description_error =None
+    if not vaccine_name:
+        vaccine_name_error = "Vaccine name is required."
+    if not image_url:
+        image_url_error = "Image URL is required."
+    if not description:
+        description_error = "Description is required."
+    errors={
+        "vaccine_name_error": vaccine_name_error,
+        "image_url_error": image_url_error,
+        "description_error": description_error
+    }
+    if not vaccine_name:
+        error = "Vaccine name is required."
+        return render_template('dashboard.html', **error)
+    conn = get_db_connection()
+    if not conn:
+        error = "Database connection error."
+        return render_template('dashboard.html', error=error)
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO vaccines (name, image_url, description) VALUES (%s, %s, %s)",
+                (vaccine_name, image_url, description)
+            )
+        conn.commit()
+    except Exception as e:
+        print(f"Error adding vaccine: {e}")
+        error = "Failed to add vaccine."
+        return render_template('dashboard.html', error=error)
+    finally:
+        conn.close()
+    return redirect(url_for('admin_dashboard'))
+@app.route('/delete_vaccine/<int:vaccine_id>', methods=['POST'])
+def delete_vaccine(vaccine_id):
+    print("here")
+    conn = get_db_connection()
+    if not conn:
+        return False
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("DELETE FROM vaccines WHERE id = %s", (vaccine_id,))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Error deleting vaccine: {e}")
+        return False
+    finally:
+        conn.close()
+        return redirect(url_for('admin_dashboard'))
+@app.route('/delete_user/<string:user_mail>', methods=['POST'])
+def delete_user(user_mail):
+    conn = get_db_connection()
+    if not conn:
+        return render_template('dashboard.html', error="Database connection error.")
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("DELETE FROM users WHERE email = %s", (user_mail,))
+        conn.commit()
+    except Exception as e:
+        print(f"Error deleting user: {e}")
+        return render_template('dashboard.html', error="Failed to delete user.")
+    finally:
+        conn.close()
+    print("User deleted successfully.")
+    return redirect(url_for('admin_dashboard'))
+@app.route('/delete_admin/<string:user_mail>', methods=['POST'])
+def delete_admin(user_mail):
+    conn = get_db_connection()
+    if not conn:
+        return render_template('dashboard.html', error="Database connection error.")
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("DELETE FROM admin WHERE email = %s", (user_mail,))
+        conn.commit()
+    except Exception as e:
+        print(f"Error deleting user: {e}")
+        return render_template('dashboard.html', error="Failed to delete user.")
+    finally:
+        conn.close()
+    print("User deleted successfully.")
+    return redirect(url_for('admin_dashboard'))
 
+@app.route('/add_admin', methods=['POST'])
+def add_admin():
+    email = request.form.get('admin_email', '').strip()
+    password = request.form.get('admin_password', '')
+    email_error = password_error = error = None
+
+    if not email:
+        email_error = "Email is required."
+    elif ("@" not in email or "." not in email):
+        email_error = "Invalid email address."
+    
+    if not password:
+        password_error = "Password is required."
+    elif len(password) < 8:
+        password_error = "Password must be at least 8 characters long."
+    conn = get_db_connection()
+    if not conn:
+        error = "Database connection error."
+        return render_template('dashboard.html', error=error,email=email, email_error=email_error, password_error=password_error)
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM admin WHERE email = %s", (email,))
+            existing_admin = cursor.fetchone()
+            if existing_admin:
+                email_error = "Admin email already exists."
+        if not password:
+            password_error = "Password is required."
+        elif len(password) < 8:
+            password_error = "Password must be at least 8 characters long."
+        if email_error or password_error:
+            return render_template('dashboard.html', email_error=email_error, password_error=password_error)
+        with conn.cursor() as cursor:
+            cursor.execute("INSERT INTO admin (email, password) VALUES (%s, %s)", (email, password))
+        conn.commit()
+    except Exception as e:
+        print(f"Error adding admin: {e}")
+        error = "Failed to add admin."
+        return render_template('dashboard.html', error=error)
+    finally:
+        conn.close()
+    return redirect(url_for('admin_dashboard'))
+    
+@app.route('/update_delivery/<int:delivery_id>', methods=['POST'])
+def update_delivery(delivery_id):
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"error": "Database connection error."}), 500
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("UPDATE deliveries SET status='Delivered' WHERE id = %s", (delivery_id,))
+        conn.commit()
+        return redirect(url_for('admin_dashboard'))
+    except Exception as e:
+        print(f"Error updating delivery: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+@app.route('/admin_dashboard')
+def admin_dashboard():
+    connection= get_db_connection()
+    if not connection:
+        return render_template('dashboard.html', error="Database connection error.")
+    cursor= connection.cursor()
+    cursor.execute("SELECT * FROM vaccines")
+    vaccines = cursor.fetchall()
+    cursor.execute("SELECT d.*,v.name,v.image_url FROM deliveries d JOIN vaccines v ON d.vaccine_id = v.id")
+    deliveries = cursor.fetchall()
+    cursor.execute("SELECT `email`,`created_at` FROM users")
+    users = cursor.fetchall()
+    cursor.execute("SELECT * FROM admin")
+    admins = cursor.fetchall()
+    cursor.execute("select count(*) from deliveries where status='Delivered'")
+    total_deliveries = cursor.fetchone()['count(*)']
+    
+    cursor.close()
+    messages={
+        "vaccines": vaccines,
+        "deliveries": deliveries,
+        "users": users,
+        "admins": admins,
+        "total_users": len(users),
+        "total_drones":  1,
+        "total_deliveries": total_deliveries,
+        "pending_deliveries": len(deliveries) - total_deliveries
+    }
+    return render_template('dashboard.html',**messages )
+
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('home'))
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)

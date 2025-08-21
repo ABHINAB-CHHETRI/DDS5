@@ -266,12 +266,20 @@
                 <p>Active Drones</p>
             </div>
             <div class="stat-card">
+                <h2>{{ total_requests }}</h2>
+                <p>Total Requests</p>
+            </div>
+            <div class="stat-card">
                 <h2>{{ total_deliveries }}</h2>
                 <p>Deliveries</p>
             </div>
             <div class="stat-card">
                 <h2>{{ pending_deliveries }}</h2>
                 <p>Pending Requests</p>
+            </div>
+            <div class="stat-card">
+                <h2>{{ failed_deliveries }}</h2>
+                <p>Failed deliveries</p>
             </div>
         </section>
         <section>
@@ -393,6 +401,8 @@
                         <th>Location Coordinates</th>
                         <th>Distance</th>
                         <th>Created At</th>
+                        <th>delivery_token</th>
+                        <th>updated_at</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -411,16 +421,13 @@
                         <td><span>({{delivery.latitude}},{{delivery.longitude}})</span></td>
                         <td>{{ delivery.distance_km }} km</td>
                         <td>{{delivery.created_at}}</td>
+                        <td>{{delivery.delivery_token}}</td>
+                        <td>{{delivery.updated_at}}</td>
                         <td>{{delivery.status}}</td>
                         <td>
-                            <form action="/update_delivery/{{ delivery.id }}" method="POST" style="display:inline;">
-                                {% if delivery.status == 'Delivered' %}
+                            <form action="/delete_delivery/{{ delivery.id }}" method="POST" style="display:inline;">
                                 <button type="submit" class="action-btn"
-                                    onclick="return confirm('Deliver this vaccine?');" disabled> Delivered</button>
-                                {% else %}
-                                <button type="submit" class="action-btn"
-                                    onclick="return confirm('Deliver this vaccine?');">Mark As Delivered</button>
-                                {% endif %}
+                                    onclick="return confirm('Delete this delivery request?');">Delete</button>
                             </form>
                         </td>
                     </tr>

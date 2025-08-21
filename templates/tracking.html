@@ -103,7 +103,7 @@
   <header>
     <h1>Drone Dispatch System</h1>
   </header>
-
+    
   <section class="hero">
     <div id="map"></div>
     <div id="eta">Calculating ETA...</div>
@@ -119,6 +119,7 @@
           <strong>Latitude:</strong> {{ data.latitude }}<br>
           <strong>Longitude:</strong> {{ data.longitude }}<br>
           <strong>Distance : </strong>{{ data.distance }} km<br>
+          <strong>Access Token : {{token}}</strong>
         </li>
       </ul>
       {% else %}
@@ -285,29 +286,76 @@
 
   // After arrival: landing, dispatch, return, final delivered after home
   function afterArrival() {
-    document.getElementById("eta").innerText = "Landing...";
-    droneMarker.bindPopup("Landing...").openPopup();
-    postStatus("Drone Landing");
+    // Show token verification form before landing
+    const etaDiv = document.getElementById("eta");
+    etaDiv.innerHTML = `
+      <form  id="tokenForm" style="margin-top:1rem;">
+      <label for="deliveryToken"><strong>Enter Delivery Token:</strong></label>
+      <input type="text" id="deliveryToken" name="deliveryToken" required style="margin-left:8px;">
+      <button type="submit">Verify</button>
+      </form>
+      <div id="tokenError" style="color:red;margin-top:8px;"></div>
+    `;
 
-    setTimeout(() => {
-      document.getElementById("eta").innerText = "Dispatching vaccine...";
-      droneMarker.bindPopup("Dispatching vaccine...").openPopup();
-      postStatus("dispatching vaccine");
-
-      setTimeout(() => {
-        document.getElementById("eta").innerText = "Returning to Home Station...";
-        droneMarker.bindPopup("Returning to Home Station...").openPopup();
-        postStatus("returning to home station");
-
-        // Animate return and show "Delivered" after arriving home
-        animateReturn();
-        setTimeout(() => {
-          document.getElementById("eta").innerText = "Delivered!!!!";
-          droneMarker.bindPopup("Delivered!!!!").openPopup();
-          postStatus("Delivered");
-        }, durationMs); // Wait for drone to finish returning
-      }, 2000);
-    }, 2000);
+    document.getElementById("tokenForm").onsubmit = async function (e) {
+      e.preventDefault();
+      const token = document.getElementById("deliveryToken").value.trim();
+      document.getElementById("tokenError").innerText = "";
+      if (!token) {
+        document.getElementById("tokenError").innerText = "Please enter a token.";
+        return;
+      }
+      try {
+        const response = await fetch(`/delivery/${deliveryId}/verify_token`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token })
+        });
+        if (!response.ok) {
+          document.getElementById("tokenError").innerText = "Server error verifying token.";
+          return;
+        }
+        const data = await response.json();
+        if (data && data.valid === true) {
+          etaDiv.innerText = "Landing...";
+          droneMarker.bindPopup("Landing...").openPopup();
+          postStatus("Drone Landing");
+          setTimeout(() => {
+            document.getElementById("eta").innerText = "Dispatching vaccine...";
+            droneMarker.bindPopup("Dispatching vaccine...").openPopup();
+            postStatus("dispatching vaccine");
+            setTimeout(() => {
+              document.getElementById("eta").innerText = "Returning to Home Station...";
+              droneMarker.bindPopup("Returning to Home Station...").openPopup();
+              postStatus("returning to home station");
+              animateReturn();
+              setTimeout(() => {
+                document.getElementById("eta").innerText = "Delivered!!!!";
+                droneMarker.bindPopup("Delivered!!!!").openPopup();
+                postStatus("delivered");
+              }, durationMs);
+            }, 2000);
+          }, 2000);
+        } else {
+          document.getElementById("tokenError").innerText = "Invalid token! Drone retreating.";
+          droneMarker.bindPopup("Token Invalid! Retreating...").openPopup();
+          postStatus("token failed");
+          setTimeout(() => {
+            document.getElementById("eta").innerText = "Returning to Home Station...";
+            droneMarker.bindPopup("Returning to Home Station...").openPopup();
+            postStatus("returning to home station");
+            animateReturn();
+            setTimeout(() => {
+              document.getElementById("eta").innerText = "Delivery Failed: Invalid Token";
+              droneMarker.bindPopup("Delivery Failed: Invalid Token").openPopup();
+              postStatus("delivery failed");
+            }, durationMs);
+          }, 2000);
+        }
+      } catch (err) {
+        document.getElementById("tokenError").innerText = "Error verifying token.";
+      }
+    };
   }
 
   // Animate drone returning to home
